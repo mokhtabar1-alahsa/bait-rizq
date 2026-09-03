@@ -1037,7 +1037,7 @@ if(window.location.search.includes('booking')){
           <!-- Price preview -->
           <div id="price-preview" style="display:none;margin-top:12px;padding:14px;background:var(--gold-pale);border-radius:var(--r-sm);border:1.5px solid var(--sand-dark);">
             <div style="display:flex;justify-content:space-between;"><span style="font-size:13px;color:var(--muted);">اجمالي المبلغ</span><span style="font-weight:800;font-size:17px;color:var(--gold);" id="total-preview">0 ريال</span></div>
-            <div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="font-size:13px;color:var(--muted);">العربون المطلوب الآن</span><span style="font-weight:700;font-size:15px;color:var(--earth-dark);">٥٠٠ ريال</span></div>
+            <div style="display:flex;justify-content:space-between;margin-top:6px;"><span style="font-size:13px;color:var(--muted);">العربون المطلوب الآن</span><span style="font-weight:700;font-size:15px;color:var(--earth-dark);" id="deposit-preview-2">٥٠٠ ريال</span></div>
             <div id="price-breakdown"></div>
           </div>
 
@@ -2465,6 +2465,12 @@ function syncCfgToFirebase(){
   if(typeof window.saveSettingsToFirebase==='function'){
     window.saveSettingsToFirebase({cfg:cfg, policies:policies});
   }
+  // Any settings save (prices, deposits, pool, upper floor, bank info,
+  // policies, descriptions, welcome message, info page, review page texts)
+  // goes through this function, so refreshing client-facing views here
+  // guarantees every settings change reflects everywhere immediately —
+  // no need to remember to call a refresh from each individual save function.
+  if(typeof refreshClientFacingViews==='function') try{refreshClientFacingViews();}catch(e){}
 }
 window.applySettings=function(data){
   if(data.cfg){
@@ -2475,8 +2481,7 @@ window.applySettings=function(data){
   if(data.policies){
     Object.keys(data.policies).forEach(k=>{ policies[k]=data.policies[k]; });
   }
-  if(typeof renderInfoPage==='function') try{renderInfoPage();}catch(e){}
-  if(typeof renderClientBookingForm==='function' && document.getElementById('type-cards-grid')) try{renderClientBookingForm();}catch(e){}
+  if(typeof refreshClientFacingViews==='function') try{refreshClientFacingViews();}catch(e){}
 };
 function savePrices(){BOOKING_TYPES.forEach(t=>cfg.prices[t.id]=parseFloat(document.getElementById('price-'+t.id).value)||0);renderInfoPage();syncCfgToFirebase();showToast('تم حفظ الاسعار');}
 function saveDeposits(){BOOKING_TYPES.forEach(t=>cfg.deposits[t.id]=parseFloat(document.getElementById('dep-'+t.id).value)||0);syncCfgToFirebase();showToast('تم حفظ العربون');}
@@ -2579,6 +2584,23 @@ function saveWelcomeMsg(){
   showToast('تم حفظ رسالة الترحيب');
 }
 function saveBankInfo(){cfg.bank={name:document.getElementById('bank-name').value,bank:document.getElementById('bank-bank').value,iban:document.getElementById('bank-iban').value,phone:document.getElementById('bank-phone').value};syncCfgToFirebase();showToast('تم حفظ البيانات البنكية');}
+// Refreshes all client-facing displays that read from cfg/policies, WITHOUT
+// resetting any in-progress booking form data. Call this after any settings save.
+function refreshClientFacingViews(){
+  // Type cards (prices/deposits/descriptions) — safe to refresh even mid-booking,
+  // re-marks the currently selected card if any.
+  const grid = document.getElementById('type-cards-grid');
+  if(grid){
+    grid.innerHTML = BOOKING_TYPES.map(t=>`<div class="type-card" id="tc-${t.id}" onclick="selectType('${t.id}')"><div class="type-card-icon">${t.icon}</div><div class="type-card-name">${t.name}</div><div class="type-card-price">${cfg.prices[t.id].toLocaleString('ar')} &#65020;/ليلة</div><div class="type-card-deposit">عربون: ${cfg.deposits[t.id].toLocaleString('ar')} &#65020;</div><div class="type-card-desc">${cfg.descs[t.id]}</div></div>`).join('');
+    if(selectedType && document.getElementById('tc-'+selectedType)) document.getElementById('tc-'+selectedType).classList.add('selected');
+  }
+  if(typeof calcClientAmount==='function' && selectedType) try{calcClientAmount();}catch(e){}
+  if(typeof buildBookingSummary==='function' && document.getElementById('booking-summary')) try{buildBookingSummary();}catch(e){}
+  if(typeof buildPoliciesDisplay==='function' && document.getElementById('policies-display')) try{buildPoliciesDisplay();}catch(e){}
+  if(typeof buildBankInfoDisplay==='function' && document.getElementById('bank-info-display')) try{buildBankInfoDisplay();}catch(e){}
+  if(typeof renderInfoPage==='function') try{renderInfoPage();}catch(e){}
+  if(typeof applyReviewPageTexts==='function') try{applyReviewPageTexts();}catch(e){}
+}
 function renderClientBookingForm(){
   selectedCheckin = null; selectedCheckout = null; wantsFurniture = false; wantsUpperFloor = false; upperFloorRoom = null;
   if(document.getElementById('cl-name')) document.getElementById('cl-name').value='';
@@ -2712,6 +2734,7 @@ function calcClientAmount(){
   document.getElementById('price-preview').style.display='block';
   document.getElementById('total-preview').textContent=total.toLocaleString('ar')+' ريال';
   document.getElementById('deposit-preview').textContent=deposit.toLocaleString('ar')+' ريال';
+  document.getElementById('deposit-preview-2').textContent=deposit.toLocaleString('ar')+' ريال';
   // Show price breakdown
   const breakdown = document.getElementById('price-breakdown');
   if(breakdown){
