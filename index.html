@@ -696,6 +696,12 @@ if(window.location.search.includes('booking')){
         <button class="btn btn-gold" onclick="savePoolSettings()">حفظ</button>
       </div>
     </div>
+    <div class="card"><div class="card-header"><span class="card-title">التجهيز الخارجي (كراسي وطاولات وفرش)</span></div>
+      <div class="card-body" style="display:flex;flex-direction:column;gap:12px;">
+        <div class="form-group"><label>رسوم التجهيز الخارجي (ريال، مرة واحدة لكل حجز)</label><input type="number" id="furniture-fee-input" placeholder="0" value="500"></div>
+        <button class="btn btn-gold" onclick="saveFurnitureSettings()">حفظ</button>
+      </div>
+    </div>
     <div class="card"><div class="card-header"><span class="card-title">العربون لكل نوع (ريال)</span></div><div class="card-body"><div id="deposit-form" style="display:flex;flex-direction:column;gap:14px;"></div><div style="margin-top:16px;"><button class="btn btn-gold" onclick="saveDeposits()">حفظ</button></div></div></div>
     <div class="card"><div class="card-header"><span class="card-title">أسعار القسم العلوي (رسم إضافي فوق سعر المنتجع، ريال/ليلة)</span></div><div class="card-body"><div id="upperfloor-form" style="display:flex;flex-direction:column;gap:14px;"></div><div style="margin-top:16px;"><button class="btn btn-gold" onclick="saveUpperFloorFees()">حفظ</button></div></div></div>
     <div class="card" style="grid-column:1/-1;"><div class="card-header"><span class="card-title">عنوان ووصف الصفحة الرئيسية (يظهر للعميل أعلى صفحة الحجز)</span></div>
@@ -926,7 +932,7 @@ if(window.location.search.includes('booking')){
             <div style="display:flex;gap:10px;">
               <div id="furniture-yes" onclick="selectFurniture(true)" style="flex:1;padding:11px;border:2px solid var(--sand-dark);border-radius:var(--r-sm);text-align:center;cursor:pointer;transition:all .2s;background:var(--white);">
                 <div style="font-size:13px;font-weight:700;color:var(--earth-dark);">نعم</div>
-                <div style="font-size:11px;color:var(--muted);">+ ٥٠٠ ريال</div>
+                <div style="font-size:11px;color:var(--muted);" id="furniture-fee-label">+ ٥٠٠ ريال</div>
               </div>
               <div id="furniture-no" onclick="selectFurniture(false)" style="flex:1;padding:11px;border:2px solid var(--gold);border-radius:var(--r-sm);text-align:center;cursor:pointer;transition:all .2s;background:var(--gold-pale);">
                 <div style="font-size:13px;font-weight:700;color:var(--earth-dark);">لا، بدون تجهيز</div>
@@ -1179,7 +1185,7 @@ function getUpperFloorFee(room, checkinDate){
   return weekend ? fees.weekend : fees.weekday;
 }
 
-let cfg={pool:{enabled:true,fee:200},upperFloor:{double:{weekday:200,weekend:300},quad:{weekday:700,weekend:500},both:{weekday:1700,weekend:1500}},welcomeMsg:'اهلاً وسهلاً بكم في منتجع بيت رزق التراثي!\n\nيسعدنا استقبالكم وتمنياتنا لكم اقامة لا تنسى مليئة بالراحة والذكريات الجميلة.\n\nفي حال وجود اي استفسار لا تترددوا بالتواصل معنا.\n\nمنتجع بيت رزق - 0595750500',prices:{family:800,occasion:2000},deposits:{family:500,occasion:600},descs:{family:'إقامة عائلية في منتجع تراثي أصيل — غرفتا نوم، مجلسان كبيران، مطبخ، مسبح خارجي.',occasion:'حفلات، خطوبة، زواج، وجميع المناسبات الخاصة في اجواء تراثية مميزة.'},bank:{name:'جعفر عبدالوهاب علي الجمعة',bank:'بنك البلاد',iban:'SA3415000963109331860007',phone:'0595750500'},infoPage:{
+let cfg={pool:{enabled:true,fee:200},furniture:{fee:500},upperFloor:{double:{weekday:200,weekend:300},quad:{weekday:700,weekend:500},both:{weekday:1700,weekend:1500}},welcomeMsg:'اهلاً وسهلاً بكم في منتجع بيت رزق التراثي!\n\nيسعدنا استقبالكم وتمنياتنا لكم اقامة لا تنسى مليئة بالراحة والذكريات الجميلة.\n\nفي حال وجود اي استفسار لا تترددوا بالتواصل معنا.\n\nمنتجع بيت رزق - 0595750500',prices:{family:800,occasion:2000},deposits:{family:500,occasion:600},descs:{family:'إقامة عائلية في منتجع تراثي أصيل — غرفتا نوم، مجلسان كبيران، مطبخ، مسبح خارجي.',occasion:'حفلات، خطوبة، زواج، وجميع المناسبات الخاصة في اجواء تراثية مميزة.'},bank:{name:'جعفر عبدالوهاب علي الجمعة',bank:'بنك البلاد',iban:'SA3415000963109331860007',phone:'0595750500'},infoPage:{
   title:'منتجع بيت رزق التراثي',
   subtitle:'منتجع على الطراز التراثي القديم والنزل الريفية\nالمستوحاة من الهوية الأحسائية وسط نخيل الواحة',
   groundItems:[
@@ -1247,7 +1253,7 @@ function renderInfoPage(){
     ipPriceRow('وسط الأسبوع', cfg.prices.family) +
     ipPriceRow('الويكند والعطل الرسمية', getWeekendPrice('family')) +
     ipPriceRow('الحفلات والمناسبات والأعياد', cfg.prices.occasion) +
-    '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(201,151,58,.08);border-radius:var(--r-sm);font-size:12px;border:1px dashed var(--sand-dark);"><span style="color:var(--muted);">تجهيز خارجي (كراسي وطاولات وفرش بدون كوشة)</span><span style="font-weight:700;color:var(--earth);">+ ٥٠٠ ريال</span></div>';
+    '<div style="display:flex;justify-content:space-between;padding:10px 14px;background:rgba(201,151,58,.08);border-radius:var(--r-sm);font-size:12px;border:1px dashed var(--sand-dark);"><span style="color:var(--muted);">تجهيز خارجي (كراسي وطاولات وفرش بدون كوشة)</span><span style="font-weight:700;color:var(--earth);">+ '+cfg.furniture.fee.toLocaleString('ar')+' ريال</span></div>';
 
   // Prices - upper floor weekday
   document.getElementById('ip-prices-upper-weekday').innerHTML =
@@ -2417,6 +2423,7 @@ function renderSettings(){
   // Pool settings
   if(document.getElementById('pool-enabled')) document.getElementById('pool-enabled').value = cfg.pool.enabled?'yes':'no';
   if(document.getElementById('pool-fee')) document.getElementById('pool-fee').value = cfg.pool.fee;
+  if(document.getElementById('furniture-fee-input')) document.getElementById('furniture-fee-input').value = cfg.furniture.fee;
   if(document.getElementById('welcome-msg')) document.getElementById('welcome-msg').value = cfg.welcomeMsg;
   // Load policies
   document.getElementById('pol-cancel').value = policies.cancel;
@@ -2578,6 +2585,11 @@ function savePoolSettings(){
   syncCfgToFirebase();
   showToast('تم حفظ اعدادات المسبح');
 }
+function saveFurnitureSettings(){
+  cfg.furniture.fee = parseFloat(document.getElementById('furniture-fee-input').value)||0;
+  syncCfgToFirebase();
+  showToast('تم حفظ رسوم التجهيز الخارجي');
+}
 function saveWelcomeMsg(){
   cfg.welcomeMsg = document.getElementById('welcome-msg').value;
   syncCfgToFirebase();
@@ -2594,6 +2606,8 @@ function refreshClientFacingViews(){
     grid.innerHTML = BOOKING_TYPES.map(t=>`<div class="type-card" id="tc-${t.id}" onclick="selectType('${t.id}')"><div class="type-card-icon">${t.icon}</div><div class="type-card-name">${t.name}</div><div class="type-card-price">${cfg.prices[t.id].toLocaleString('ar')} &#65020;/ليلة</div><div class="type-card-deposit">عربون: ${cfg.deposits[t.id].toLocaleString('ar')} &#65020;</div><div class="type-card-desc">${cfg.descs[t.id]}</div></div>`).join('');
     if(selectedType && document.getElementById('tc-'+selectedType)) document.getElementById('tc-'+selectedType).classList.add('selected');
   }
+  const furnLbl = document.getElementById('furniture-fee-label');
+  if(furnLbl) furnLbl.textContent = '+ '+cfg.furniture.fee.toLocaleString('ar')+' ريال';
   if(typeof calcClientAmount==='function' && selectedType) try{calcClientAmount();}catch(e){}
   if(typeof buildBookingSummary==='function' && document.getElementById('booking-summary')) try{buildBookingSummary();}catch(e){}
   if(typeof buildPoliciesDisplay==='function' && document.getElementById('policies-display')) try{buildPoliciesDisplay();}catch(e){}
@@ -2622,6 +2636,8 @@ function renderClientBookingForm(){
   updateProgress(1);
   setTimeout(()=>populateCheckinTimes(), 100);
   document.getElementById('type-cards-grid').innerHTML=BOOKING_TYPES.map(t=>`<div class="type-card" id="tc-${t.id}" onclick="selectType('${t.id}')"><div class="type-card-icon">${t.icon}</div><div class="type-card-name">${t.name}</div><div class="type-card-price">${cfg.prices[t.id].toLocaleString('ar')} &#65020;/ليلة</div><div class="type-card-deposit">عربون: ${cfg.deposits[t.id].toLocaleString('ar')} &#65020;</div><div class="type-card-desc">${cfg.descs[t.id]}</div></div>`).join('');
+  const furnLbl0 = document.getElementById('furniture-fee-label');
+  if(furnLbl0) furnLbl0.textContent = '+ '+cfg.furniture.fee.toLocaleString('ar')+' ريال';
 }
 function selectType(id){selectedType=id;document.querySelectorAll('.type-card').forEach(c=>c.classList.remove('selected'));document.getElementById('tc-'+id).classList.add('selected');populateCheckinTimes();calcClientAmount();}
 function validateDates(){
@@ -2722,7 +2738,7 @@ function calcClientAmount(){
   if(nights<=0)return;
   const pricePerNight = getPriceForDate(selectedType, ci);
   const poolFee = wantsPool && cfg.pool.enabled ? nights*cfg.pool.fee : 0;
-  const furnitureFee = wantsFurniture ? 500 : 0;
+  const furnitureFee = wantsFurniture ? cfg.furniture.fee : 0;
   const upperFloorFeePerNight = wantsUpperFloor ? getUpperFloorFee(upperFloorRoom, ci) : 0;
   const upperFloorFee = upperFloorFeePerNight * nights;
   const total = nights*pricePerNight + poolFee + furnitureFee + upperFloorFee;
@@ -2733,7 +2749,8 @@ function calcClientAmount(){
   updateUpperRoomPrices();
   document.getElementById('price-preview').style.display='block';
   document.getElementById('total-preview').textContent=total.toLocaleString('ar')+' ريال';
-  document.getElementById('deposit-preview').textContent=deposit.toLocaleString('ar')+' ريال';
+  const dp1 = document.getElementById('deposit-preview');
+  if(dp1) dp1.textContent=deposit.toLocaleString('ar')+' ريال';
   document.getElementById('deposit-preview-2').textContent=deposit.toLocaleString('ar')+' ريال';
   // Show price breakdown
   const breakdown = document.getElementById('price-breakdown');
@@ -2742,7 +2759,7 @@ function calcClientAmount(){
     breakdown.innerHTML = '<div style="font-size:11px;color:var(--muted);margin-top:6px;">'+
       pricePerNight.toLocaleString('ar')+' ريال/ليلة '+(isWknd?'(ويكند)':'(وسط الأسبوع)')+
       (poolFee>0?' + مسبح':'')+
-      (furnitureFee>0?' + تجهيز (٥٠٠ ريال)':'')+
+      (furnitureFee>0?' + تجهيز ('+furnitureFee.toLocaleString('ar')+' ريال)':'')+
       (upperFloorFee>0?' + دور علوي ('+(roomLabels[upperFloorRoom]||'')+')':'')+
     '</div>';
   }
@@ -2783,7 +2800,7 @@ function buildBookingSummary(){
   const nights=Math.max(1, Math.ceil((new Date(co)-new Date(ci))/(864e5)));
   const pricePerNight=getPriceForDate(selectedType, ci);
   const poolFee = wantsPool && cfg.pool.enabled ? nights*cfg.pool.fee : 0;
-  const furnitureFee = wantsFurniture ? 500 : 0;
+  const furnitureFee = wantsFurniture ? cfg.furniture.fee : 0;
   const upperFloorFeePerNight = wantsUpperFloor ? getUpperFloorFee(upperFloorRoom, ci) : 0;
   const upperFloorFee = upperFloorFeePerNight * nights;
   const total=nights*pricePerNight + poolFee + furnitureFee + upperFloorFee, deposit=cfg.deposits[selectedType];
@@ -2876,7 +2893,7 @@ function submitBooking(){
   const cit=document.getElementById('cl-checkin-time').value,cot=document.getElementById('cl-checkout-time').value;
   const nights=Math.max(1, Math.ceil((new Date(co)-new Date(ci))/(864e5)));
   const poolFee = wantsPool && cfg.pool.enabled ? nights*cfg.pool.fee : 0;
-  const furnitureFee = wantsFurniture ? 500 : 0;
+  const furnitureFee = wantsFurniture ? cfg.furniture.fee : 0;
   const upperFloorFeePerNight = wantsUpperFloor ? getUpperFloorFee(upperFloorRoom, ci) : 0;
   const upperFloorFee = upperFloorFeePerNight * nights;
   const total=nights*getPriceForDate(selectedType, ci) + poolFee + furnitureFee + upperFloorFee,deposit=cfg.deposits[selectedType];
